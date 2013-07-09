@@ -1,3 +1,36 @@
+app-launcher-icon大小
 medium, high, x-high, and xx-high
 2:3:4:6
 48*48px,72*72px,96*96px,144*144px
+
+其他尺寸说明
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+Screen Size  |  Low density (120), ldpi  |  Medium density (160), mdpi  |  High density (240), hdpi  |   Extra high density (320), xhdpi
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+small		 |	QVGA (240x320)			 |								|    480x640				 |
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+normal	     |	WQVGA400 (240x400) 		 |              		     	|    WVGA800 (480x800)       |
+    	     |	WQVGA432 (240x432) 		 | HVGA (320x480) 		     	|    WVGA854 (480x854)       | 		640x960
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+    	     |							 |								|							 |
+large    	 |   WVGA800 (480x800)       | WVGA800 (480x800)			|							 |
+    	     |	 WVGA854 (480x854)		 | WVGA854 (480x854)			|							 |
+    	     |							 | 600x1024		  				|							 |
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+xlarge		 |							 |                              |							 |
+			 |		1024x600 			 |	WXGA (1280x800)				|		1536x1152			 |		2048x1536
+			 |							 |	1024x768					|		1920x1152			 |		2560x1536
+			 |							 |	1280x768					|		1920x1200			 |		2560x1600
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 											
+											
+											
+small -normal -large-xlarge(相对屏幕而言)的大小界定详见：
+https://developer.android.com/guide/practices/screens_support.html.
+
+xlarge - 7寸-10寸
+large  - 估计5寸-7寸
+
+xlarge screens are at least 960dp x 720dp
+large screens are at least 640dp x 480dp
+normal screens are at least 470dp x 320dp
+small screens are at least 426dp x 320dp

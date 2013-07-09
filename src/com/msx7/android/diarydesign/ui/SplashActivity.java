@@ -1,7 +1,9 @@
-package com.msx7.android.diarydesign;
+package com.msx7.android.diarydesign.ui;
 
 import android.app.Activity;
 import android.os.Bundle;
+
+import com.msx7.android.diarydesign.R;
 
 public class SplashActivity extends Activity {
 

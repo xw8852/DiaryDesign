@@ -911,6 +911,7 @@ containing a value of this type.
         public static final int abs__textfield_searchview_right_holo_light=0x7f02006e;
         public static final int abs__toast_frame=0x7f02006f;
         public static final int ic_launcher=0x7f020070;
+        public static final int shape_dotted_box=0x7f020071;
     }
     public static final class id {
         public static final int abs__action_bar=0x7f040020;
@@ -961,6 +962,7 @@ containing a value of this type.
         public static final int showHome=0x7f040005;
         public static final int showTitle=0x7f040007;
         public static final int tabMode=0x7f040003;
+        public static final int textView1=0x7f040032;
         public static final int useLogo=0x7f040004;
         public static final int wrap_content=0x7f040000;
     }

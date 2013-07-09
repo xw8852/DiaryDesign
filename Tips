@@ -1,0 +1,60 @@
+— — — — — — — — — — — — — — —修改记录 — — — — — — — — — — — — — — — — — — — — — — — — 
+2013-07-09 10:28 — — — — — — 肖伟 — — — — — — 初始化  
+
+
+— — — — — — — — — — — — — — —源码结构说明 — — — — — — — — — — — — — — — — — — — — — — — — 
+src
+
+com.msx7.android.diarydesign
+		|
+		|-config 全局变量
+		|
+		|-db     数据库相关
+		|
+		|-entity 实体类
+		|
+		|-https  网络相关
+		|
+		|-ui	视图相关所有的类
+		  |
+		  |-base Activity,Fragment,FragmentActivity的基类
+		  |
+		  |-view  fragment相关
+		  |
+		  |-widgt 自定义UI组件
+		|
+		|-utils 工具类
+		|
+res
+	|
+	|-drawable
+		|
+		|-drawble — — — — — — —自定义drawable例如shape等等
+		|
+		|-drawable-hdpi — — — —密度的屏幕 (~240dpi).通常指的是:480x800,480x854
+		|
+		|-drawable-ldpi — — — —密度的屏幕 (~120dpi). 通常指的是:240x320
+		|
+		|-drawable-mdpi — — — —密度的屏幕 (~160dpi). (这是默认的基准密度.) 通常指的是:320x480
+		|
+		|-drawable-xhdpi— — — —密度的屏幕 (~320dpi). 通常指的是:640x960
+		|
+		|-drawable-xxhdpi — — —密度的屏幕 (~480dpi).
+	|
+	|-layout
+	|
+	|-menu
+	|
+	|-values
+		|
+		|-values  默认(文字：英文)	
+		|
+		|-values-zh-rCN  简体中文
+		|
+		|-values-zh-rTW  繁体中文
+
+	|
+	|
+
+
+  
