@@ -1,5 +1,7 @@
 package com.msx7.android.diarydesign.ui.widget;
 
+import java.util.ArrayList;
+
 import android.content.Context;
 import android.graphics.Rect;
 import android.util.AttributeSet;
@@ -26,9 +28,12 @@ public class DragGridView extends GridView implements android.widget.AdapterView
     protected int mLastX = INVALID;
     protected int mLastY = INVALID;
     protected int mTargetIndex = INVALID;
-    DragAdapter mAdapter;
+    protected int mDragPosition = INVALID;
+    ArrayList<Rect> mRects = new ArrayList<Rect>();
+    Rect rect = new Rect();
+    DragAdapter<?> mAdapter;
+    int mAnimDuration = getResources().getInteger(android.R.integer.config_shortAnimTime);
     RelativeLayout.LayoutParams mLayoutParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-    protected Rect mRect = new Rect();
 
     public DragGridView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
@@ -45,6 +50,13 @@ public class DragGridView extends GridView implements android.widget.AdapterView
         init();
     }
 
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        super.onLayout(changed, l, t, r, b);
+        if (mDragIndex != INVALID)
+            getChildAt(mDragIndex).layout(rect.left, rect.top, rect.right, rect.bottom);
+    }
+
     private boolean _init = false;
 
     /**
@@ -58,7 +70,7 @@ public class DragGridView extends GridView implements android.widget.AdapterView
         setNumColumns(4);
     }
 
-    public void setAdapter(DragAdapter adapter) {
+    public void setAdapter(DragAdapter<?> adapter) {
         super.setAdapter(adapter);
         mAdapter = adapter;
     }
@@ -80,6 +92,8 @@ public class DragGridView extends GridView implements android.widget.AdapterView
         return super.onInterceptTouchEvent(ev);
     }
 
+    long lastAnim;
+
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
         if (!isDrag() || mDragIndex == INVALID) {
@@ -94,15 +108,19 @@ public class DragGridView extends GridView implements android.widget.AdapterView
         case MotionEvent.ACTION_MOVE:
             int deltaY = mLastY - (int) ev.getY();
             int deltaX = mLastX - (int) ev.getX();
-            if (Math.abs(deltaX) < 10 || Math.abs(deltaY) < 10)
+            if (Math.abs(deltaX) < 10 && Math.abs(deltaY) < 10)
                 break;
             if (mDragIndex != INVALID) {
                 Rect _rect = new Rect();
                 View view = getChildAt(mDragIndex);
                 view.getHitRect(_rect);
                 getChildAt(mDragIndex).layout(_rect.left - deltaX, _rect.top - deltaY, _rect.right - deltaX, _rect.bottom - deltaY);
-                mTargetIndex = getTargetFromCoor((int) ev.getX(), (int) ev.getY());
-                if (mTargetIndex != INVALID && mTargetIndex != mDragIndex) {
+                getChildAt(mDragIndex).getHitRect(rect);
+                int tmpTarget = getTargetFromCoor((int) ev.getX(), (int) ev.getY());
+                if (tmpTarget != INVALID && tmpTarget != mDragIndex && tmpTarget != mTargetIndex
+                        && System.currentTimeMillis() - lastAnim > mAnimDuration) {
+                    mTargetIndex = tmpTarget;
+                    lastAnim = System.currentTimeMillis();
                     grapAnimation(mTargetIndex);
                 }
             }
@@ -119,7 +137,7 @@ public class DragGridView extends GridView implements android.widget.AdapterView
             if (mTargetIndex != INVALID && mTargetIndex != mDragIndex) {
                 Rect rect = new Rect();
                 getChildAt(mDragIndex).getHitRect(rect);
-                Animation animation = generateAniamtion(rect.left, mRect.left, rect.top, mRect.top);
+                Animation animation = generateAniamtion(rect.left, mRects.get(mTargetIndex).left, rect.top, mRects.get(mTargetIndex).top);
                 animation.setAnimationListener(mAnimationListener);
                 getChildAt(mDragIndex).startAnimation(animation);
             } else {
@@ -147,96 +165,106 @@ public class DragGridView extends GridView implements android.widget.AdapterView
 
         @Override
         public void onAnimationEnd(Animation animation) {
-            mAdapter.insertPostion(getPositionForView(getChildAt(mDragIndex)), getPositionForView(getChildAt(mTargetIndex)));
+            mAdapter.insertPostion(mDragPosition, mDragPosition + mTargetIndex - mDragIndex);
             mAdapter.notifyDataSetChanged();
             mTargetIndex = INVALID;
             mDragIndex = INVALID;
-            mDragState = INVALID;
+            mDragPosition = mDragState = INVALID;
+            invalidate();
+        }
+    };
+    AnimationListener mTMPAnimationListener = new AnimationListener() {
+
+        @Override
+        public void onAnimationStart(Animation animation) {
+
+        }
+
+        @Override
+        public void onAnimationRepeat(Animation animation) {
+
+        }
+
+        @Override
+        public void onAnimationEnd(Animation animation) {
+            if (mDragPosition + mTargetIndex - mDragIndex < 0) {
+                return;
+            }
+            mAdapter.insertPostion(mDragPosition, mDragPosition + mTargetIndex - mDragIndex);
+            mAdapter.notifyDataSetChanged();
+            mDragPosition = mDragPosition + mTargetIndex - mDragIndex;
+            mDragIndex = mTargetIndex;
         }
     };
 
     @Override
     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+        mRects.clear();
         mDragIndex = getIndexFromCoor();
         if (mDragIndex != INVALID) {
             mDragState = DRAG_START;
-            getChildAt(mDragIndex).getHitRect(mRect);
-            Log.d("MSG", "mDragIndex-------->" + mDragIndex);
+            mDragPosition = position;
             return true;
         }
         return false;
     }
 
     public int getIndexFromCoor() {
+        int _postion = INVALID;
         int _length = getChildCount();
-        Rect _rect = new Rect();
         for (int i = 0; i < _length; i++) {
+            Rect _rect = new Rect();
             getChildAt(i).getHitRect(_rect);
+            mRects.add(_rect);
             if (_rect.contains(mLastX, mLastY))
-                return i;
+                _postion = i;
         }
-        return INVALID;
+        return _postion;
     }
 
     public int getTargetFromCoor(int x, int y) {
-        int _length = getChildCount();
-        Rect _rect = new Rect();
+        int _length = mRects.size();
         for (int i = 0; i < _length; i++) {
-            getChildAt(i).getHitRect(_rect);
-            if (_rect.contains(x, y))
+            if (mRects.get(i).contains(x, y))
                 return i;
         }
         return INVALID;
     }
 
     private void grapAnimation(int target) {
-        Rect tmp = new Rect();
-        getChildAt(target).getHitRect(tmp);
         if (target > mDragIndex) {
             for (int i = target; i > mDragIndex; i--) {
-                Rect _rect = new Rect();
-                Rect rect = new Rect();
-                getChildAt(i).getHitRect(rect);
+                Animation animation = generateAniamtion(mRects.get(i).left, mRects.get(i - 1).left, mRects.get(i).top, mRects.get(i - 1).top);
                 if (i - 1 == mDragIndex) {
-                    _rect=new Rect(mRect);
-                } else
-                    getChildAt(i-1).getHitRect(_rect);
-                Log.d("MSG", "_rect-------->" + _rect.toString());
-                Log.d("MSG", "rect-------->" + rect.toString());
-                Animation animation = generateAniamtion(rect.left, _rect.left, rect.top, _rect.top);
+                    animation.setAnimationListener(mTMPAnimationListener);
+                }
                 getChildAt(i).startAnimation(animation);
             }
         } else {
             for (int i = target; i < mDragIndex; i++) {
-                Rect _rect = new Rect();
-                Rect rect = new Rect();
-                getChildAt(i).getHitRect(rect);
+                Animation animation = generateAniamtion(mRects.get(i).left, mRects.get(i + 1).left, mRects.get(i).top, mRects.get(i + 1).top);
                 if (i + 1 == mDragIndex) {
-                    _rect=new Rect(mRect);
-                } else
-                    getChildAt(1+i).getHitRect(_rect);
-                Animation animation = generateAniamtion(rect.left, _rect.left, rect.top, _rect.top);
+                    animation.setAnimationListener(mTMPAnimationListener);
+                }
                 getChildAt(i).startAnimation(animation);
             }
         }
-        mRect = new Rect(tmp);
-        // Rect rect=new Rect();
-        // getChildAt(mDragIndex).getHitRect(rect);
-        // getChildAt(target).getHitRect(_rect);
-        // Animation animation=generateAniamtion(rect.left, _rect.left,
-        // rect.top, _rect.top);
-        // getChildAt(mDragIndex).startAnimation(animation);
     }
 
     private TranslateAnimation generateAniamtion(float fromXValue, float toXValue, float fromYValue, float toYValue) {
-        TranslateAnimation mAnimation = new TranslateAnimation(Animation.ABSOLUTE, fromXValue, Animation.ABSOLUTE, toXValue, Animation.ABSOLUTE, fromYValue,
-                Animation.ABSOLUTE, toYValue);
-        mAnimation.setDuration(100);
+        TranslateAnimation mAnimation = new TranslateAnimation(Animation.ABSOLUTE, 0, Animation.ABSOLUTE, toXValue - fromXValue, Animation.ABSOLUTE,
+                0, Animation.ABSOLUTE, toYValue - fromYValue);
+        mAnimation.setDuration(mAnimDuration);
+        mAnimation.setFillEnabled(true);
         mAnimation.setFillAfter(true);
         return mAnimation;
     }
 
-    public static interface OnDragLisenter {
+    public static interface OnDragLisenter<T> {
+        public T[] getData();
+
+        public void setData(T[] arr);
+
         public void enableEdit(boolean isEdit);
 
         /**
@@ -249,7 +277,28 @@ public class DragGridView extends GridView implements android.widget.AdapterView
         public void insertPostion(int dragPosition, int insertPosition);
     }
 
-    public static abstract class DragAdapter extends BaseAdapter implements OnDragLisenter {
+    public static abstract class DragAdapter<T> extends BaseAdapter implements OnDragLisenter<T> {
+
+        @Override
+        public void insertPostion(int dragPosition, int insertPosition) {
+            T[] arr = getData();
+            T[] arr1 = arr.clone();
+            if (dragPosition > insertPosition) {
+                System.arraycopy(arr, 0, arr1, 0, insertPosition);
+                System.arraycopy(arr, insertPosition, arr1, insertPosition + 1, dragPosition - insertPosition);
+                if (dragPosition + 1 < arr1.length)
+                    System.arraycopy(arr, dragPosition + 1, arr1, dragPosition + 1, arr1.length - 1 - dragPosition);
+                arr1[insertPosition] = arr[dragPosition];
+            } else {
+                System.arraycopy(arr, 0, arr1, 0, dragPosition);
+                System.arraycopy(arr, dragPosition + 1, arr1, dragPosition, insertPosition - dragPosition);
+                if (dragPosition + 1 < arr1.length)
+                    System.arraycopy(arr, insertPosition + 1, arr1, insertPosition + 1, arr1.length - 1 - insertPosition);
+                arr1[insertPosition] = arr[dragPosition];
+            }
+            setData(arr1);
+            notifyDataSetChanged();
+        }
 
     }
 
